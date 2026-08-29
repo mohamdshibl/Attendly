@@ -1,18 +1,26 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../core/services/time_service.dart';
 import '../../../data/models/attendance_model.dart';
+import '../../../data/models/leave_type_model.dart';
+import '../../../data/models/leave_request_model.dart';
 import '../../../domain/repositories/attendance_repository.dart';
 import '../../../domain/repositories/shift_repository.dart';
+import '../../../domain/repositories/leave_repository.dart';
+import '../../../domain/repositories/holiday_repository.dart';
 import 'employee_dashboard_state.dart';
 
 class EmployeeDashboardCubit extends Cubit<EmployeeDashboardState> {
   final AttendanceRepository _attendanceRepository;
   final ShiftRepository _shiftRepository;
+  final LeaveRepository _leaveRepository;
+  final HolidayRepository _holidayRepository;
   final TimeService _timeService;
 
   EmployeeDashboardCubit(
     this._attendanceRepository,
     this._shiftRepository,
+    this._leaveRepository,
+    this._holidayRepository,
     this._timeService,
   ) : super(const EmployeeDashboardInitial());
 
@@ -32,9 +40,53 @@ class EmployeeDashboardCubit extends Cubit<EmployeeDashboardState> {
         todayStr,
       );
 
+      // Check if employee is on leave today
+      bool onLeave = false;
+      String? leaveTypeName;
+      final todayDate = DateTime.parse(todayStr);
+
+      final requests = await _leaveRepository.getLeaveRequestsForEmployee(employeeId);
+      final leaveTypes = await _leaveRepository.getLeaveTypes();
+      
+      LeaveRequestModel? activeRequest;
+      for (final r in requests) {
+        if (r.status == 'APPROVED') {
+          final start = DateTime(r.startDate.year, r.startDate.month, r.startDate.day);
+          final end = DateTime(r.endDate.year, r.endDate.month, r.endDate.day);
+          final todayNormalized = DateTime(todayDate.year, todayDate.month, todayDate.day);
+          if ((todayNormalized.isAfter(start) || todayNormalized.isAtSameMomentAs(start)) &&
+              (todayNormalized.isBefore(end) || todayNormalized.isAtSameMomentAs(end))) {
+            activeRequest = r;
+            break;
+          }
+        }
+      }
+
+      if (activeRequest != null) {
+        onLeave = true;
+        final type = leaveTypes.firstWhere(
+          (t) => t.id == activeRequest!.leaveTypeId,
+          orElse: () => LeaveTypeModel(name: 'إجازة', code: 'OTHER'),
+        );
+        leaveTypeName = type.name;
+      }
+
+      // Check if today is an official holiday
+      bool isHoliday = false;
+      String? holidayName;
+      final holiday = await _holidayRepository.getHolidayByDate(todayDate);
+      if (holiday != null) {
+        isHoliday = true;
+        holidayName = holiday.name;
+      }
+
       emit(EmployeeDashboardLoaded(
         shift: shift,
         todayAttendance: todayAttendance,
+        onLeave: onLeave,
+        leaveType: leaveTypeName,
+        isHoliday: isHoliday,
+        holidayName: holidayName,
       ));
     } catch (e) {
       emit(EmployeeDashboardError('حدث خطأ أثناء تحميل البيانات: $e'));

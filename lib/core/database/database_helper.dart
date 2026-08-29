@@ -92,6 +92,96 @@ class DatabaseHelper {
             keyPath: 'key',
           );
         }
+
+        // 5. Leave Types Store
+        if (!db.objectStoreNames.contains(SchemaConstants.storeLeaveTypes)) {
+          final store = db.createObjectStore(
+            SchemaConstants.storeLeaveTypes,
+            keyPath: 'id',
+            autoIncrement: true,
+          );
+          store.createIndex(
+            SchemaConstants.indexName,
+            'name',
+            unique: true,
+          );
+        }
+
+        // 6. Leave Requests Store
+        if (!db.objectStoreNames.contains(SchemaConstants.storeLeaveRequests)) {
+          final store = db.createObjectStore(
+            SchemaConstants.storeLeaveRequests,
+            keyPath: 'id',
+            autoIncrement: true,
+          );
+          store.createIndex(
+            SchemaConstants.indexEmployeeId,
+            'employeeId',
+            unique: false,
+          );
+          store.createIndex(
+            SchemaConstants.indexStatus,
+            'status',
+            unique: false,
+          );
+          store.createIndex(
+            SchemaConstants.indexStartDate,
+            'startDate',
+            unique: false,
+          );
+          store.createIndex(
+            SchemaConstants.indexEndDate,
+            'endDate',
+            unique: false,
+          );
+          store.createIndex(
+            SchemaConstants.indexEmployeeIdStatus,
+            ['employeeId', 'status'],
+            unique: false,
+          );
+        }
+
+        // 7. Leave Balances Store
+        if (!db.objectStoreNames.contains(SchemaConstants.storeLeaveBalances)) {
+          final store = db.createObjectStore(
+            SchemaConstants.storeLeaveBalances,
+            keyPath: 'id',
+            autoIncrement: true,
+          );
+          store.createIndex(
+            SchemaConstants.indexEmployeeId,
+            'employeeId',
+            unique: false,
+          );
+          store.createIndex(
+            SchemaConstants.indexEmployeeTypeYear,
+            ['employeeId', 'leaveTypeId', 'leaveYear'],
+            unique: true,
+          );
+        }
+
+        // 8. Official Holidays Store
+        if (!db.objectStoreNames.contains(SchemaConstants.storeOfficialHolidays)) {
+          final store = db.createObjectStore(
+            SchemaConstants.storeOfficialHolidays,
+            keyPath: 'id',
+            autoIncrement: true,
+          );
+          store.createIndex(
+            SchemaConstants.indexDate,
+            'date',
+            unique: true,
+          );
+        }
+
+        // 9. Audit Logs Store
+        if (!db.objectStoreNames.contains(SchemaConstants.storeAuditLogs)) {
+          db.createObjectStore(
+            SchemaConstants.storeAuditLogs,
+            keyPath: 'id',
+            autoIncrement: true,
+          );
+        }
       },
     );
 

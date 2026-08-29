@@ -63,14 +63,65 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
             final record = state.todayAttendance;
 
             // Determine status and buttons availability
-            final bool canCheckIn = record == null;
-            final bool canCheckOut = record != null && record.checkOut == null;
+            final bool onLeave = state.onLeave;
+            final bool isHoliday = state.isHoliday;
+            final String? leaveTypeName = state.leaveType;
+            final String? holidayName = state.holidayName;
+
+            final bool canCheckIn = record == null && !onLeave && !isHoliday;
+            final bool canCheckOut = record != null && record.checkOut == null && !onLeave && !isHoliday;
 
             return SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  // Holiday/Leave Alerts
+                  if (onLeave)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: AppColors.secondary.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.secondary.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.beach_access_rounded, color: AppColors.secondary),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'أنت في إجازة معتمدة اليوم ($leaveTypeName) - تم إيقاف تسجيل الحضور.',
+                              style: AppTextStyles.bodyBold.copyWith(color: AppColors.secondary),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  if (isHoliday)
+                    Container(
+                      margin: const EdgeInsets.only(bottom: 20),
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                      decoration: BoxDecoration(
+                        color: AppColors.accent.withOpacity(0.08),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: AppColors.accent.withOpacity(0.3)),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.event_available_rounded, color: AppColors.accent),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Text(
+                              'اليوم عطلة رسمية بمناسبة ($holidayName) - تم إيقاف تسجيل الحضور.',
+                              style: AppTextStyles.bodyBold.copyWith(color: AppColors.accent),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
                   // Welcome Header
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -89,7 +140,15 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
                           ),
                         ],
                       ),
-                      _buildStatusBadge(record?.status ?? 'NOT_CHECKED_IN'),
+                      _buildStatusBadge(
+                        onLeave
+                            ? 'ON_LEAVE'
+                            : isHoliday
+                                ? 'HOLIDAY'
+                                : (record?.status ?? 'NOT_CHECKED_IN'),
+                        leaveType: leaveTypeName,
+                        holidayName: holidayName,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 32),
@@ -339,7 +398,7 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
     );
   }
 
-  Widget _buildStatusBadge(String status) {
+  Widget _buildStatusBadge(String status, {String? leaveType, String? holidayName}) {
     String text = '';
     Color color = Colors.grey;
 
@@ -363,6 +422,14 @@ class _EmployeeDashboardViewState extends State<EmployeeDashboardView> {
       case 'ABSENT':
         text = 'غائب';
         color = AppColors.error;
+        break;
+      case 'ON_LEAVE':
+        text = 'إجازة (${leaveType ?? 'معتمدة'})';
+        color = AppColors.secondary;
+        break;
+      case 'HOLIDAY':
+        text = 'عطلة رسمية (${holidayName ?? ''})';
+        color = AppColors.accent;
         break;
     }
 

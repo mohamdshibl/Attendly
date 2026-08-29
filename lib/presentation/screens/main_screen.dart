@@ -7,10 +7,14 @@ import '../cubits/auth/auth_state.dart';
 import 'login_screen.dart';
 import 'employee_dashboard_screen.dart';
 import 'attendance_history_screen.dart';
+import 'employee_leave_screen.dart';
 import 'admin/admin_dashboard_screen.dart';
 import 'admin/employee_list_screen.dart';
 import 'admin/shift_list_screen.dart';
 import 'admin/reports_screen.dart';
+import 'admin/leave_requests_screen.dart';
+import 'admin/holiday_list_screen.dart';
+import 'admin/audit_logs_screen.dart';
 import '../cubits/admin_dashboard/admin_dashboard_cubit.dart';
 import '../../core/di/service_locator.dart';
 
@@ -71,6 +75,9 @@ class _AdminMainShellState extends State<AdminMainShell> {
     AdminDashboardView(),
     EmployeeListView(),
     ShiftListView(),
+    LeaveRequestsView(),
+    HolidayListView(),
+    AuditLogsView(),
     ReportsView(),
     AdminSettingsView(),
   ];
@@ -141,8 +148,11 @@ class _AdminMainShellState extends State<AdminMainShell> {
                 _buildSidebarItem(0, 'لوحة التحكم', Icons.dashboard_outlined),
                 _buildSidebarItem(1, 'الموظفين', Icons.people_outline_rounded),
                 _buildSidebarItem(2, 'الورديات', Icons.schedule_outlined),
-                _buildSidebarItem(3, 'التقارير', Icons.analytics_outlined),
-                _buildSidebarItem(4, 'إعدادات النظام', Icons.settings_outlined),
+                _buildSidebarItem(3, 'طلبات الإجازات', Icons.beach_access_rounded),
+                _buildSidebarItem(4, 'العطلات الرسمية', Icons.event_available_rounded),
+                _buildSidebarItem(5, 'سجل المعاملات', Icons.history_rounded),
+                _buildSidebarItem(6, 'التقارير', Icons.analytics_outlined),
+                _buildSidebarItem(7, 'إعدادات النظام', Icons.settings_outlined),
               ],
             ),
           ),
@@ -213,11 +223,14 @@ class _AdminMainShellState extends State<AdminMainShell> {
             Expanded(
               child: ListView(
                 children: [
-                  _buildDrawerItem(0, 'لوحة التحكم', Icons.dashboard_outlined),
-                  _buildDrawerItem(1, 'الموظفين', Icons.people_outline_rounded),
-                  _buildDrawerItem(2, 'الورديات', Icons.schedule_outlined),
-                  _buildDrawerItem(3, 'التقارير', Icons.analytics_outlined),
-                  _buildDrawerItem(4, 'إعدادات النظام', Icons.settings_outlined),
+                   _buildDrawerItem(0, 'لوحة التحكم', Icons.dashboard_outlined),
+                   _buildDrawerItem(1, 'الموظفين', Icons.people_outline_rounded),
+                   _buildDrawerItem(2, 'الورديات', Icons.schedule_outlined),
+                   _buildDrawerItem(3, 'طلبات الإجازات', Icons.beach_access_rounded),
+                   _buildDrawerItem(4, 'العطلات الرسمية', Icons.event_available_rounded),
+                   _buildDrawerItem(5, 'سجل المعاملات', Icons.history_rounded),
+                   _buildDrawerItem(6, 'التقارير', Icons.analytics_outlined),
+                   _buildDrawerItem(7, 'إعدادات النظام', Icons.settings_outlined),
                 ],
               ),
             ),
@@ -274,6 +287,7 @@ class _EmployeeMainShellState extends State<EmployeeMainShell> {
     final List<Widget> views = [
       EmployeeDashboardView(employee: widget.employee),
       AttendanceHistoryView(employee: widget.employee),
+      EmployeeLeaveView(employee: widget.employee),
     ];
 
     return Directionality(
@@ -311,6 +325,7 @@ class _EmployeeMainShellState extends State<EmployeeMainShell> {
                 children: [
                   _buildTabButton(0, 'لوحة التحكم اليومية', Icons.dashboard_outlined),
                   _buildTabButton(1, 'سجل الحضور والانصراف', Icons.history_rounded),
+                  _buildTabButton(2, 'الطلبات والإجازات', Icons.beach_access_rounded),
                 ],
               ),
             ),
