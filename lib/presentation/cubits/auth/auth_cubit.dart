@@ -36,7 +36,7 @@ class AuthCubit extends Cubit<AuthState> {
   Future<void> login(String code, String pinOrPassword) async {
     emit(const AuthLoading());
     try {
-      final employee = await _employeeRepository.authenticate(code, pinOrPassword);
+      final employee = await _employeeRepository.authenticate(code.trim(), pinOrPassword.trim());
       if (employee != null) {
         // Save current user session ID
         await _dbHelper.put(SchemaConstants.storeSettings, {

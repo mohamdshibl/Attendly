@@ -25,13 +25,25 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
 
   @override
   Future<EmployeeModel?> getEmployeeByCode(String code) async {
+    final trimmed = code.trim();
     final map = await _dbHelper.queryByIndex(
       SchemaConstants.storeEmployees,
       SchemaConstants.indexEmployeeCode,
-      code,
+      trimmed,
     );
-    if (map == null) return null;
-    return EmployeeModel.fromMap(map);
+    if (map != null) {
+      return EmployeeModel.fromMap(map);
+    }
+
+    // Fallback: Case-insensitive scan
+    final all = await getEmployees();
+    final normalized = trimmed.toLowerCase();
+    for (final emp in all) {
+      if (emp.employeeCode.trim().toLowerCase() == normalized) {
+        return emp;
+      }
+    }
+    return null;
   }
 
   @override
@@ -54,7 +66,7 @@ class EmployeeRepositoryImpl implements EmployeeRepository {
     if (!employee.isActive) return null;
 
     // Verify password hash
-    final isValid = HashUtils.verifyPassword(pinOrPassword, employee.passwordHash);
+    final isValid = HashUtils.verifyPassword(pinOrPassword.trim(), employee.passwordHash);
     if (!isValid) return null;
 
     return employee;

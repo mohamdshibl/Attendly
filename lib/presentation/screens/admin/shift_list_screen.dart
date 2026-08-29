@@ -26,6 +26,7 @@ class _ShiftListViewState extends State<ShiftListView> {
   }
 
   void _showShiftDialog({ShiftModel? shift}) {
+    final outerContext = context;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -38,7 +39,7 @@ class _ShiftListViewState extends State<ShiftListView> {
               shift: shift,
               onSuccess: () {
                 // Reload dashboard data
-                sl<AdminDashboardCubit>().loadDashboard();
+                outerContext.read<AdminDashboardCubit>().loadDashboard();
                 Navigator.of(context).pop();
               },
             ),
@@ -49,6 +50,7 @@ class _ShiftListViewState extends State<ShiftListView> {
   }
 
   void _confirmDelete(ShiftModel shift) {
+    final outerContext = context;
     showDialog(
       context: context,
       builder: (context) {
@@ -64,15 +66,18 @@ class _ShiftListViewState extends State<ShiftListView> {
               ),
               ElevatedButton(
                 onPressed: () async {
+                  final dashboardCubit = outerContext.read<AdminDashboardCubit>();
                   await _manageCubit.deleteShift(shift.id!);
-                  sl<AdminDashboardCubit>().loadDashboard();
-                  Navigator.of(context).pop();
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('تم حذف الوردية بنجاح'),
-                      backgroundColor: AppColors.success,
-                    ),
-                  );
+                  dashboardCubit.loadDashboard();
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('تم حذف الوردية بنجاح'),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
                 child: const Text('حذف', style: TextStyle(fontFamily: 'Inter')),
@@ -185,8 +190,9 @@ class _ShiftListViewState extends State<ShiftListView> {
                           value: shift.isActive,
                           activeColor: AppColors.secondary,
                           onChanged: (value) async {
+                            final dashboardCubit = context.read<AdminDashboardCubit>();
                             await _manageCubit.toggleShiftStatus(shift);
-                            sl<AdminDashboardCubit>().loadDashboard();
+                            dashboardCubit.loadDashboard();
                           },
                         ),
                       ),

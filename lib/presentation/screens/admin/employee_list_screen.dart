@@ -27,6 +27,7 @@ class _EmployeeListViewState extends State<EmployeeListView> {
   }
 
   void _showEmployeeDialog({EmployeeModel? employee, required List<ShiftModel> shifts}) {
+    final outerContext = context;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -40,10 +41,50 @@ class _EmployeeListViewState extends State<EmployeeListView> {
               shifts: shifts,
               onSuccess: () {
                 // Reload dashboard data
-                sl<AdminDashboardCubit>().loadDashboard();
+                outerContext.read<AdminDashboardCubit>().loadDashboard();
                 Navigator.of(context).pop();
               },
             ),
+          ),
+        );
+      },
+    );
+  }
+
+  void _confirmDelete(EmployeeModel employee) {
+    final outerContext = context;
+    showDialog(
+      context: context,
+      builder: (context) {
+        return Directionality(
+          textDirection: TextDirection.rtl,
+          child: AlertDialog(
+            title: const Text('تأكيد الحذف', style: AppTextStyles.h2),
+            content: Text('هل أنت متأكد من رغبتك في حذف الموظف "${employee.name}"؟', style: AppTextStyles.body),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('إلغاء', style: TextStyle(color: AppColors.textSecondary, fontFamily: 'Inter')),
+              ),
+              ElevatedButton(
+                onPressed: () async {
+                  final dashboardCubit = outerContext.read<AdminDashboardCubit>();
+                  await _manageCubit.deleteEmployee(employee.id!);
+                  dashboardCubit.loadDashboard();
+                  if (context.mounted) {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('تم حذف الموظف بنجاح'),
+                        backgroundColor: AppColors.success,
+                      ),
+                    );
+                  }
+                },
+                style: ElevatedButton.styleFrom(backgroundColor: AppColors.error),
+                child: const Text('حذف', style: TextStyle(fontFamily: 'Inter')),
+              ),
+            ],
           ),
         );
       },
@@ -172,16 +213,30 @@ class _EmployeeListViewState extends State<EmployeeListView> {
                                 value: employee.isActive,
                                 activeColor: AppColors.secondary,
                                 onChanged: (value) async {
+                                  final dashboardCubit = context.read<AdminDashboardCubit>();
                                   await _manageCubit.toggleEmployeeStatus(employee);
-                                  sl<AdminDashboardCubit>().loadDashboard();
+                                  dashboardCubit.loadDashboard();
                                 },
                               ),
                       ),
                       DataCell(
-                        IconButton(
-                          icon: const Icon(Icons.edit_outlined, color: AppColors.secondary),
-                          onPressed: () => _showEmployeeDialog(employee: employee, shifts: shifts),
-                          tooltip: 'تعديل البيانات',
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            IconButton(
+                              icon: const Icon(Icons.edit_outlined, color: AppColors.secondary),
+                              onPressed: () => _showEmployeeDialog(employee: employee, shifts: shifts),
+                              tooltip: 'تعديل البيانات',
+                            ),
+                            if (!isAdmin) ...[
+                              const SizedBox(width: 8),
+                              IconButton(
+                                icon: const Icon(Icons.delete_outline_rounded, color: AppColors.error),
+                                onPressed: () => _confirmDelete(employee),
+                                tooltip: 'حذف الموظف',
+                              ),
+                            ],
+                          ],
                         ),
                       ),
                     ],

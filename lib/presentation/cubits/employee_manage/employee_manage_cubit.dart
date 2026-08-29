@@ -28,7 +28,7 @@ class EmployeeManageCubit extends Cubit<EmployeeManageState> {
       final newEmployee = EmployeeModel(
         employeeCode: employeeCode.trim(),
         name: name.trim(),
-        passwordHash: HashUtils.hashPassword(pin),
+        passwordHash: HashUtils.hashPassword(pin.trim()),
         department: department.trim(),
         shiftId: shiftId,
         isActive: true,
@@ -67,8 +67,8 @@ class EmployeeManageCubit extends Cubit<EmployeeManageState> {
       final updatedEmployee = originalEmployee.copyWith(
         employeeCode: trimmedCode,
         name: name.trim(),
-        passwordHash: pin != null && pin.isNotEmpty 
-            ? HashUtils.hashPassword(pin) 
+        passwordHash: pin != null && pin.trim().isNotEmpty 
+            ? HashUtils.hashPassword(pin.trim()) 
             : originalEmployee.passwordHash,
         department: department.trim(),
         shiftId: shiftId,
@@ -91,6 +91,17 @@ class EmployeeManageCubit extends Cubit<EmployeeManageState> {
       emit(const EmployeeManageSuccess());
     } catch (e) {
       emit(EmployeeManageError('خطأ أثناء تعديل حالة الموظف: $e'));
+    }
+  }
+
+  // Delete an employee
+  Future<void> deleteEmployee(int id) async {
+    emit(const EmployeeManageLoading());
+    try {
+      await _employeeRepository.deleteEmployee(id);
+      emit(const EmployeeManageSuccess());
+    } catch (e) {
+      emit(EmployeeManageError('خطأ أثناء حذف الموظف: $e'));
     }
   }
 }
